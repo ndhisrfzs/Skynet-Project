@@ -49,7 +49,7 @@ function cli:matching()
 	if ret == false then
 		return FAIL
 	else
-		return SUCC
+		return ret
 	end
 end
 
