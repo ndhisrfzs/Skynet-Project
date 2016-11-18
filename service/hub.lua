@@ -8,23 +8,23 @@ local hub = {}
 local data = { socket = {} }
 
 local function auth_socket(fd)
-	return (skynet.call(service.auth, "lua", "shakehand" , fd))
+	return skynet.call(service.auth, "lua", "shakehand" , fd)
 end
 
-local function assign_agent(fd, username)
-	skynet.call(service.manager, "lua", "assign", fd, username)
+local function assign_agent(fd, uid)
+	skynet.call(service.manager, "lua", "assign", fd, uid)
 end
 
 function new_socket(fd, addr)
 	data.socket[fd] = "[AUTH]"
 	proxy.subscribe(fd)
-	local ok , username =  pcall(auth_socket, fd)
-	if ok then
-		data.socket[fd] = username
-		if pcall(assign_agent, fd, username) then
+	local ok , uid =  pcall(auth_socket, fd)
+	if ok and uid then
+		data.socket[fd] = uid
+		if pcall(assign_agent, fd, uid) then
 			return	-- succ
 		else
-			log("Assign failed %s to %s", addr, username)
+			log("Assign failed %s to %s", addr, uid)
 		end
 	else
 		log("Auth faild %s", addr)

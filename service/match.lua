@@ -7,9 +7,14 @@ local users = {}
 local tmpuser = {}
 local match_response = {}
 
+local function new_room()
+	return skynet.newservice "room"
+end
+
 local function match_users()
 	while true do
 		if #users >= 2 then
+			local room = new_room()
 			local player1 = table.remove(users, 1)
 			local player2 = table.remove(users, 1)
 
@@ -17,13 +22,13 @@ local function match_users()
 			match_response[player1.uid] = nil
 			users[player1.uid] = nil
 			tmpuser[player1.uid] = nil
-			response(true, player2.data)
+			response(true, player2.data, room)
 
 			response = match_response[player2.uid]
 			match_response[player2.uid] = nil
 			users[player2.uid] = nil
 			tmpuser[player2.uid] = nil
-			response(true, player1.data)
+			response(true, player1.data, room)
 		else
 			skynet.sleep(100)	-- sleep 10 min
 		end

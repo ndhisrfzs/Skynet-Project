@@ -37,6 +37,13 @@ function manager.exit(uid)
 	users[uid] = nil
 end
 
+function manager.exitagent(fd, uid)
+	local agent = users[uid]
+	if agent then
+		skynet.call(agent, "lua", "exit", fd)
+	end
+end
+
 service.init {
 	command = manager,
 	info = users,

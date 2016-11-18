@@ -36,8 +36,10 @@ function cli:ping()
 end
 
 function auth.shakehand(fd)
-	local ok, c = pcall(client.dispatch, { fd = fd })
-	return c.uid
+	local ok, c = pcall(client.dispatch , { fd = fd })
+	if ok then
+		return c.uid
+	end
 end
 
 service.init {

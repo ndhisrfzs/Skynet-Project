@@ -45,17 +45,17 @@ end
 
 function cli:matching()
 	local role = skynet.call(service.database, "lua", "data", "role", "load", data.uid)
-	local ret = skynet.call(service.match, "lua", "matching", data.uid, role)
+	local ret, room = skynet.call(service.match, "lua", "matching", data.uid, role)
 	if ret == false then
 		return FAIL
 	else
+		self.exit = true
+		self.room = room
 		return ret
 	end
 end
 
-local function new_user(fd)
-	local ok, error = pcall(client.dispatch , { fd = fd })
-	log("fd=%d is gone. error = %s", fd, error)
+local function exit(fd)
 	client.close(fd)
 	if data.fd == fd then
 		data.fd = nil
@@ -72,6 +72,16 @@ local function new_user(fd)
 	end
 end
 
+local function new_user(fd)
+	local ok, c = pcall(client.dispatch , { fd = fd })
+	if ok == false then
+		log("fd=%d is gone. error = %s", fd, c)
+		exit(fd)
+	else
+		skynet.call(c.room, "lua", "assign", data.fd, data.uid)
+	end
+end
+
 function agent.assign(fd, uid)
 	if data.exit then
 		return false
@@ -82,6 +92,10 @@ function agent.assign(fd, uid)
 	assert(data.uid == uid)
 	skynet.fork(new_user, fd)
 	return true
+end
+
+function agent.exit(fd)
+	skynet.fork(exit, fd)
 end
 
 service.init {
