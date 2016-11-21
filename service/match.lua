@@ -18,6 +18,8 @@ local function match_users()
 			local player1 = table.remove(users, 1)
 			local player2 = table.remove(users, 1)
 
+			skynet.call(room, "lua", "init", player1.uid, player2.uid)
+
 			local response = match_response[player1.uid]
 			match_response[player1.uid] = nil
 			users[player1.uid] = nil

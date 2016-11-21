@@ -16,11 +16,6 @@ local cards = {
 	0, 1, 1, 1, 0,	
 	0, 0, 0, 0, 0 
 }
-local p1babys = {}
-local p1handcards = {}
-local p2babys = {}
-local p2handcards = {}
-
 
 local function init()
 	client.init("proto")()
@@ -42,13 +37,28 @@ local function inithandcards(c)
 	end
 end
 
+local function opponent(uid)
+	for k, v in pairs(data) do
+		if uid ~= k then
+			return v
+		end
+	end
+end
+
 function cli:initroom()
-	return { cards = cards, p1babys = p1babys, p1handcards = p1handcards, p2babys = p2babys, p2handcards = p2handcards }
+	local oppo = opponent(self.uid)
+	return { cards = cards, p1babys = self.babys, p1handcards = self.handcards, p2babys = oppo.babys, p2handcards = oppo.handcards }
+end
+
+function cli:drag(args)
+	log("cli:drag")
+	local oppo = opponent(self.uid)
+	client.push(oppo, "dragdata", args)
 end
 
 local function new_user(fd, uid)
-	local c = { fd = fd, uid = uid }
-	data[uid] = c
+	local c = data[uid]
+	c.fd, c.uid = fd, uid
 	local ok, c = pcall(client.dispatch , c)
 	if ok == false then
 		log("fd=%d is gone. error = %s", fd, c)
@@ -59,6 +69,13 @@ end
 function room.assign(fd, uid)
 	skynet.fork(new_user, fd, uid)
 	return true
+end
+
+function room.init(p1, p2)
+	data[p1] = {}
+	inithandcards(data[p1])
+	data[p2] = {}
+	inithandcards(data[p2])
 end
 
 service.init {
